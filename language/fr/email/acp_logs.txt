@@ -1,0 +1,7 @@
+Subject: « {SITENAME} » - Tentative de suppression du journal « {LOG_MODE} »
+
+L’utilisateur « {USERNAME} » a tenté de supprimer le journal suivant {LOG_MODE} à {TIME} depuis l’adresse IP {IP_ADDRESS} :
+
+{LOGS_SELECTED}
+
+{EMAIL_SIG}

@@ -1,0 +1,5 @@
+Subject: « {SITENAME} » - Connexion au panneau d’administration
+
+L’utilisateur « {USERNAME} » s’est connecté au panneau d’administration le {LOGIN_TIME} depuis l’adresse IP {IP_ADDRESS}.
+
+{EMAIL_SIG}

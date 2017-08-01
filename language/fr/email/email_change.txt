@@ -1,0 +1,7 @@
+Subject: « {SITENAME} » - Adresse e-mail modifiée pour un compte utilisateur
+
+L’adresse e-mail associée au compte « {USERNAME} » et anciennement « {OLD_EMAIL} » a été modifiée pour « {NEW_EMAIL} ».
+
+Si vous êtes le titulaire de ce compte et que vous n’avez pas autorisé cette modification, il est fortement recommandé de réinitialiser votre mot de passe et de contacter {CONTACT} pour informer qu’une éventuelle brèche de sécurité a été exploitée à partir de l’adresse IP {IP_ADDRESS} ciblant votre compte (Ils ont reçu une copie de cet e-mail).
+
+{EMAIL_SIG}
