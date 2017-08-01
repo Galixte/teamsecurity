@@ -44,19 +44,16 @@ class teamsecurity_module
 		$this->template = $template;
 		$this->user = $user;
 
-		$this->user->add_lang('acp/common');
 		$this->user->add_lang_ext('phpbb/teamsecurity', 'acp_teamsecurity');
 	}
 
 	/**
 	 * Main ACP module
 	 *
-	 * @param int $id
-	 * @param string $mode
-	 * @return null
+	 * @return void
 	 * @access public
 	 */
-	public function main($id, $mode)
+	public function main()
 	{
 		$this->tpl_name = 'acp_teamsecurity';
 		$this->page_title = $this->user->lang('ACP_TEAM_SECURITY_SETTINGS');
@@ -64,7 +61,7 @@ class teamsecurity_module
 		// Only allow founders to view/manage these settings
 		if ($this->user->data['user_type'] != USER_FOUNDER)
 		{
-			trigger_error($this->user->lang['ACP_FOUNDER_MANAGE_ONLY'], E_USER_WARNING);
+			trigger_error($this->user->lang('ACP_FOUNDER_MANAGE_ONLY'), E_USER_WARNING);
 		}
 
 		$form_key = 'acp_teamsecurity';
@@ -85,20 +82,20 @@ class teamsecurity_module
 			}
 
 			$this->config->set('sec_contact', $sec_contact);
-			$this->config->set('sec_contact_name', $this->request->variable('sec_contact_name', ''));
+			$this->config->set('sec_contact_name', $this->request->variable('sec_contact_name', '', true));
 			$this->config->set('sec_login_email', $this->request->variable('sec_login_email', 0));
 			$this->config->set('sec_login_attempts', $this->request->variable('sec_login_attempts', 0));
 			$this->config->set('sec_email_changes', $this->request->variable('sec_email_changes', 0));
 			$this->config->set('sec_strong_pass', $this->request->variable('sec_strong_pass', 0));
 			$this->config->set('sec_min_pass_chars', $this->request->variable('sec_min_pass_chars', 0));
-			$this->config->set('sec_usergroups', serialize($this->request->variable('sec_usergroups', array(0))));
+			$this->config->set('sec_usergroups', json_encode($this->request->variable('sec_usergroups', array(0))));
 
 			$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_TEAM_SEC_UPDATED');
 			trigger_error($this->user->lang('CONFIG_UPDATED') . adm_back_link($this->u_action));
 		}
 
 		// Set template vars for usergroups multi-select box
-		$group_id_ary = (!$this->config['sec_usergroups']) ? array() : unserialize(trim($this->config['sec_usergroups']));
+		$group_id_ary = (!$this->config['sec_usergroups']) ? array() : json_decode(trim($this->config['sec_usergroups']), true);
 		$this->get_group_options($group_id_ary);
 
 		// Set output vars for display in the template
@@ -118,7 +115,7 @@ class teamsecurity_module
 	 * Get group options for multi-select box
 	 *
 	 * @param array $selected_id Currently selected group identifiers
-	 * @return null
+	 * @return void
 	 * @access protected
 	 */
 	protected function get_group_options($selected_id)
@@ -134,7 +131,7 @@ class teamsecurity_module
 		{
 			$this->template->assign_block_vars('group_options', array(
 				'VALUE'			=> $row['group_id'],
-				'LABEL'			=> ($row['group_type'] == GROUP_SPECIAL) ? $this->user->lang('G_' . $row['group_name']) : ucfirst(strtolower($row['group_name'])),
+				'LABEL'			=> ($row['group_type'] == GROUP_SPECIAL) ? $this->user->lang('G_' . $row['group_name']) : $row['group_name'],
 				'S_SELECTED'	=> in_array($row['group_id'], $selected_id),
 			));
 		}

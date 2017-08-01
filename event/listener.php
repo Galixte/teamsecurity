@@ -30,7 +30,7 @@ class listener implements EventSubscriberInterface
 	protected $phpbb_root_path;
 
 	/** @var string phpEx */
-	protected $phpEx;
+	protected $php_ext;
 
 	/**
 	 * Constructor
@@ -40,7 +40,6 @@ class listener implements EventSubscriberInterface
 	 * @param \phpbb\user $user User object
 	 * @param string $phpbb_root_path phpBB root path
 	 * @param string $phpEx phpEx
-	 * @return \phpbb\teamsecurity\event\listener
 	 * @access public
 	 */
 	public function __construct(\phpbb\config\config $config, \phpbb\log\log $log, \phpbb\user $user, $phpbb_root_path, $phpEx)
@@ -84,8 +83,8 @@ class listener implements EventSubscriberInterface
 	/**
 	 * Load common language files during user setup
 	 *
-	 * @param object $event The event object
-	 * @return null
+	 * @param \phpbb\event\data $event The event object
+	 * @return void
 	 * @access public
 	 */
 	public function load_language_on_setup($event)
@@ -101,8 +100,8 @@ class listener implements EventSubscriberInterface
 	/**
 	 * Set stronger password requirements for members of specific groups
 	 *
-	 * @param object $event The event object
-	 * @return null
+	 * @param \phpbb\event\data $event The event object
+	 * @return void
 	 * @access public
 	 */
 	public function set_team_password_configs($event)
@@ -113,10 +112,10 @@ class listener implements EventSubscriberInterface
 		}
 
 		// reg_details = UCP Account Settings // overview = ACP User Overview
-		if ($event['mode'] == 'reg_details' || $event['mode'] == 'overview')
+		if ($event['mode'] === 'reg_details' || $event['mode'] === 'overview')
 		{
 			// The user the new password settings apply to
-			$user_id = (isset($event['user_row']['user_id'])) ? $event['user_row']['user_id'] : $this->user->data['user_id'];
+			$user_id = isset($event['user_row']['user_id']) ? $event['user_row']['user_id'] : $this->user->data['user_id'];
 
 			if ($this->in_watch_group($user_id))
 			{
@@ -129,8 +128,8 @@ class listener implements EventSubscriberInterface
 	/**
 	 * Prevent deletion of Admin/Moderator/User logs and notify board security contact
 	 *
-	 * @param object $event The event object
-	 * @return null
+	 * @param \phpbb\event\data $event The event object
+	 * @return void
 	 * @access public
 	 */
 	public function delete_logs_security($event)
@@ -144,7 +143,7 @@ class listener implements EventSubscriberInterface
 			$user_data = array(
 				'USERNAME'		=> $this->user->data['username'],
 				'IP_ADDRESS'	=> $this->user->ip,
-				'TIME'			=> $this->user->format_date(time(), 'D M d, Y H:i:s A', true),
+				'TIME'			=> $this->user->format_date(time(), $this->config['default_dateformat'], true),
 				'LOG_MODE'		=> $event['mode'],
 			);
 
@@ -169,8 +168,8 @@ class listener implements EventSubscriberInterface
 	/**
 	 * Log failed login attempts for members of specific groups
 	 *
-	 * @param object $event The event object
-	 * @return null
+	 * @param \phpbb\event\data $event The event object
+	 * @return void
 	 * @access public
 	 */
 	public function log_failed_login_attempts($event)
@@ -189,8 +188,8 @@ class listener implements EventSubscriberInterface
 	/**
 	 * Send an email notification when a user logs into the ACP
 	 *
-	 * @param object $event The event object
-	 * @return null
+	 * @param \phpbb\event\data $event The event object
+	 * @return void
 	 * @access public
 	 */
 	public function acp_login_notification($event)
@@ -205,7 +204,7 @@ class listener implements EventSubscriberInterface
 			$this->send_message(array(
 				'USERNAME'		=> $this->user->data['username'],
 				'IP_ADDRESS'	=> $this->user->ip,
-				'LOGIN_TIME'	=> $this->user->format_date(time(), 'D M d, Y H:i:s A', true),
+				'LOGIN_TIME'	=> $this->user->format_date(time(), $this->config['default_dateformat'], true),
 			), 'acp_login', $this->user->data['user_email']);
 		}
 	}
@@ -214,8 +213,8 @@ class listener implements EventSubscriberInterface
 	 * Send an email notification when an email address
 	 * is changed for members of specific groups
 	 *
-	 * @param object $event The event object
-	 * @return null
+	 * @param \phpbb\event\data $event The event object
+	 * @return void
 	 * @access public
 	 */
 	public function email_change_notification($event)
@@ -225,8 +224,8 @@ class listener implements EventSubscriberInterface
 			return;
 		}
 
-		$user_id = (isset($event['user_row']['user_id'])) ? $event['user_row']['user_id'] : $this->user->data['user_id'];
-		$old_email = (isset($event['user_row']['user_email'])) ? $event['user_row']['user_email'] : $this->user->data['user_email'];
+		$user_id = isset($event['user_row']['user_id']) ? $event['user_row']['user_id'] : $this->user->data['user_id'];
+		$old_email = isset($event['user_row']['user_email']) ? $event['user_row']['user_email'] : $this->user->data['user_email'];
 		$new_email = $event['data']['email'];
 
 		if ($old_email != $new_email && $this->in_watch_group($user_id))
@@ -250,7 +249,7 @@ class listener implements EventSubscriberInterface
 	 */
 	protected function in_watch_group($user_id)
 	{
-		$group_id_ary = (!$this->config['sec_usergroups']) ? array() : unserialize(trim($this->config['sec_usergroups']));
+		$group_id_ary = (!$this->config['sec_usergroups']) ? array() : json_decode(trim($this->config['sec_usergroups']), true);
 
 		if (empty($group_id_ary))
 		{
@@ -259,7 +258,7 @@ class listener implements EventSubscriberInterface
 
 		if (!function_exists('group_memberships'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_user.' . $this->php_ext);
+			include $this->phpbb_root_path . 'includes/functions_user.' . $this->php_ext;
 		}
 
 		return group_memberships($group_id_ary, $user_id, true);
@@ -271,14 +270,14 @@ class listener implements EventSubscriberInterface
 	 * @param array $message_data Array of message data
 	 * @param string $template The template file to use
 	 * @param string $cc_user CC email address
-	 * @return null
+	 * @return void
 	 * @access protected
 	 */
 	protected function send_message($message_data, $template, $cc_user = '')
 	{
 		if (!class_exists('messenger'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_messenger.' . $this->php_ext);
+			include $this->phpbb_root_path . 'includes/functions_messenger.' . $this->php_ext;
 		}
 
 		$messenger = new \messenger(false);
